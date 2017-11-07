@@ -1,5 +1,5 @@
 #!/bin/bash
-JAR="jmstoolkit-cli.jar"
+JAR="jmstoolkit-cli-jar-with-dependencies.jar"
 CLASSPATH="`pwd`/${JAR}:${CLASSPATH}"
 #COMMAND="-jar $JAR"
 # Set to the directory where your JMS provider jar files are
@@ -9,7 +9,7 @@ if [ "X${JMS_PROVIDER_DIR}" != "X" ]; then
     CLASSPATH=${J}:${CLASSPATH}
   done
 fi
-for J in `ls lib/*.jar`; do
+for J in `ls lib/*.jar 2>/dev/null`; do
   CLASSPATH=${J}:${CLASSPATH}
 done
 export CLASSPATH
