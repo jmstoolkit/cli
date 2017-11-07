@@ -19,7 +19,10 @@ JAVA_OPTS="-Djava.util.logging.config.file=logging.properties $JAVA_OPTS"
 # Change the name of the properties file:
 #JAVA_OPTS="-Dapp.properties=myfile.props -Djndi.properties=some.props"
 
-
+if [ $# -eq 0 ]; then
+  echo "Usage: pipe.sh fifo-name"
+  exit 1
+fi
 FIFO="$1"
 if [ ! -p "$FIFO" ]; then
   mkfifo "$FIFO"
