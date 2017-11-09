@@ -1,23 +1,13 @@
 #!/bin/bash
-JAR="jmstoolkit-cli-jar-with-dependencies.jar"
-CLASSPATH="`pwd`/${JAR}:${CLASSPATH}"
-#COMMAND="-jar $JAR"
-# Set to the directory where your JMS provider jar files are
-#JMS_PROVIDER_DIR=`pwd`/activemq
-if [ "X${JMS_PROVIDER_DIR}" != "X" ]; then
-  for J in `ls ${JMS_PROVIDER_DIR}/*.jar`; do
-    CLASSPATH=${J}:${CLASSPATH}
-  done
-fi
-for J in `ls lib/*.jar 2>/dev/null`; do
-  CLASSPATH=${J}:${CLASSPATH}
-done
-export CLASSPATH
+# Scott Douglass <scott@swdouglass.com>
+# License: GPLv3
+# Copyright: 2017
+#
+BIN_DIR=$(dirname $0)
+. $BIN_DIR/clirc.sh
 COMMAND="com.jmstoolkit.cli.Heapstalk"
-
 JAVA_OPTS="-Djava.util.logging.config.file=logging.properties"
 # Change the name of the properties file:
 #JAVA_OPTS="-Dapp.properties=myfile.props -Djndi.properties=some.props"
-
-java -classpath $CLASSPATH $JAVA_OPTS $COMMAND $*
+java $JAVA_OPTS $COMMAND $*
 
