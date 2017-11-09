@@ -4,7 +4,7 @@
 # Copyright: 2017
 #
 BIN_DIR=$(dirname $0)
-. $BIN_DIR/clirc.sh
+. $BIN_DIR/jtk.sh
 COMMAND="com.jmstoolkit.cli.Heapstalk"
 JAVA_OPTS="-Djava.util.logging.config.file=logging.properties"
 # Change the name of the properties file:
