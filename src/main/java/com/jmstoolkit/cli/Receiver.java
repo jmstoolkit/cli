@@ -44,32 +44,59 @@ import org.springframework.jndi.JndiTemplate;
  * @author Scott Douglass
  */
 public class Receiver extends AbstractSpringMessageListener {
-  /** Logger for this class. */
-  private static final Logger LOGGER =
-    Logger.getLogger(Receiver.class.getName());
-  /** Property name for the character set encoding. */
+
+  /**
+   * Logger for this class.
+   */
+  private static final Logger LOGGER
+    = Logger.getLogger(Receiver.class.getName());
+  /**
+   * Property name for the character set encoding.
+   */
   protected static final String P_ENCODING = "jmstoolkit.encoding";
-  /** Default character set encoding value: UTF-8. */
+  /**
+   * Default character set encoding value: UTF-8.
+   */
   protected static final String D_ENCODING = "UTF-8";
-  /**Property name for the connection factory. */
+  /**
+   * Property name for the connection factory.
+   */
   protected static final String P_CONNECTION_FACTORY_NAME = "jmstoolkit.cf";
-  /** Property name for the JMS destination. */
+  /**
+   * Property name for the JMS destination.
+   */
   protected static final String P_DESTINATION_NAME = "jmstoolkit.destination";
-  /** Property name for the ConnectionFactory user. */
+  /**
+   * Property name for the ConnectionFactory user.
+   */
   protected static final String P_USERNAME = "jmstoolkit.username";
-  /** Property name for the ConnectionFatory password. */
+  /**
+   * Property name for the ConnectionFatory password.
+   */
   protected static final String P_PASSWORD = "jmstoolkit.password";
-  /** Exit code when maximum number of messages has been received. */
+  /**
+   * Exit code when maximum number of messages has been received.
+   */
   protected static final int X_MAX_MESSAGES = 2;
-  /** Exit code when an error occurs. */
+  /**
+   * Exit code when an error occurs.
+   */
   protected static final int X_ERROR = 1;
-  /** The maximum number of messages to receive. */
+  /**
+   * The maximum number of messages to receive.
+   */
   private Integer maximumMessagesToReceive = 0;
-  /** The OutputStream to send received messages. */
+  /**
+   * The OutputStream to send received messages.
+   */
   private OutputStream outputStream;
-  /** The encoding for the text messages. */
+  /**
+   * The encoding for the text messages.
+   */
   private String encoding = D_ENCODING;
-  /** The Writer for the OutputSream. */
+  /**
+   * The Writer for the OutputSream.
+   */
   private Writer outputWriter = null;
 
   @Override
@@ -117,15 +144,18 @@ public class Receiver extends AbstractSpringMessageListener {
     }
     System.exit(X_MAX_MESSAGES);
   }
-  /*
-  arguments:
-  -i destination JNDI name  (input)
-  -o output filename (otherwise stdout)
-  -j jndi properties file (defaults to jndi.properties)
-  -f connection factory JNDI name
-  -n maximum number of messages to receive
-   */
 
+  /**
+   * arguments: 
+   * <code>
+   * -i destination JNDI name (input) 
+   * -o output filename (otherwise stdout) 
+   * -j jndi properties file (defaults to jndi.properties) 
+   * -f connection factory JNDI name 
+   * -n maximum number of messages to receive
+   *</code>
+   * @param args Command line arguments
+   */
   public static void main(final String[] args) {
     try {
       Settings.loadSystemSettings(Settings.APP_PROPERTIES);
@@ -199,8 +229,8 @@ public class Receiver extends AbstractSpringMessageListener {
 
     try {
       receiver.setConnectionFactory(getSpringConnectionFactory(
-         (ConnectionFactory) receiver.getJndiTemplate().lookup(
-           System.getProperty(P_CONNECTION_FACTORY_NAME))));
+        (ConnectionFactory) receiver.getJndiTemplate().lookup(
+          System.getProperty(P_CONNECTION_FACTORY_NAME))));
       if (receiver.getListenerContainer().getConnectionFactory() == null) {
         throw new NamingException("Something is wrong.");
       }
@@ -224,8 +254,9 @@ public class Receiver extends AbstractSpringMessageListener {
   }
 
   /**
-   * Lordy, no XAConnectionFactory support in the UserCredentialsConnectionFactoryAdapter!
-   * See: https://jira.springsource.org/browse/SPR-7952
+   * Lordy, no XAConnectionFactory support in the
+   * UserCredentialsConnectionFactoryAdapter! See:
+   * https://jira.springsource.org/browse/SPR-7952
    *
    * Also, Spring 3 changed the CachingConnectionFactory so that it extends
    * SingleConnectionFactory which explicitly does not allow the username and
@@ -236,8 +267,8 @@ public class Receiver extends AbstractSpringMessageListener {
    */
   public static ConnectionFactory getSpringConnectionFactory(
     final ConnectionFactory basecf) {
-    final UserCredentialsConnectionFactoryAdapter uccfa =
-      new UserCredentialsConnectionFactoryAdapter();
+    final UserCredentialsConnectionFactoryAdapter uccfa
+      = new UserCredentialsConnectionFactoryAdapter();
     //CachingConnectionFactory ccf = new CachingConnectionFactory(basecf);
     //ccf.setCacheProducers(true);
     //uccfa.setTargetConnectionFactory(ccf);

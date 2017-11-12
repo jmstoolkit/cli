@@ -36,12 +36,19 @@ import org.springframework.jndi.JndiTemplate;
  * @author Scott Douglass
  */
 public class Heapstalk extends Receiver {
-  /** Logger for this class. */
-  private static final Logger LOGGER =
-    Logger.getLogger(Heapstalk.class.getName());
-  /** List of messages. */
+
+  /**
+   * Logger for this class.
+   */
+  private static final Logger LOGGER
+    = Logger.getLogger(Heapstalk.class.getName());
+  /**
+   * List of messages.
+   */
   private final List<String> messageList = new ArrayList<String>();
-  /** A message with this text body will end the program. */
+  /**
+   * A message with this text body will end the program.
+   */
   private static final String M_EXIT = "exit";
 
   @Override
@@ -61,7 +68,10 @@ public class Heapstalk extends Receiver {
     }
   }
 
-  /** Main method to run this dang thing. */
+  /**
+   * Main method to run this dang thing.
+   * @param args Command line arguments
+   */
   public static void main(final String[] args) {
     try {
       Settings.loadSystemSettings(Settings.APP_PROPERTIES);
@@ -107,8 +117,8 @@ public class Heapstalk extends Receiver {
 
     try {
       receiver.setConnectionFactory(getSpringConnectionFactory(
-         (ConnectionFactory) receiver.getJndiTemplate().lookup(
-           System.getProperty(P_CONNECTION_FACTORY_NAME))));
+        (ConnectionFactory) receiver.getJndiTemplate().lookup(
+          System.getProperty(P_CONNECTION_FACTORY_NAME))));
     } catch (NamingException e) {
       System.out.println("JNDI object could not be found: "
         + System.getProperty(P_CONNECTION_FACTORY_NAME));

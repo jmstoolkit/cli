@@ -44,55 +44,104 @@ import org.springframework.jms.core.MessagePostProcessor;
  * @author Scott Douglass
  */
 public class Sender {
-  /** Logger for the class. */
+
+  /**
+   * Logger for the class.
+   */
   private static final Logger LOGGER = Logger.getLogger(Sender.class.getName());
-  /** Property for the application name. */
+  /**
+   * Property for the application name.
+   */
   public static final String P_APP_NAME = "app.name";
-  /** Default value for the application name property. */
+  /**
+   * Default value for the application name property.
+   */
   public static final String D_APP_NAME = "JMSToolKit";
-  /** Default JNDI properties file. */
+  /**
+   * Default JNDI properties file.
+   */
   public static final String D_JNDI_PROPERTIES = "jndi.properties";
-  /** Property name or the correlation ID. */
+  /**
+   * Property name or the correlation ID.
+   */
   public static final String P_CORRELATION_ID = "correlation_id";
-  /** Default value of the correlation ID property. */
+  /**
+   * Default value of the correlation ID property.
+   */
   public static final String D_CORRELATION_ID = UUID.randomUUID().toString();
-  /** Actual correlation ID value.*/
-  public static final String CORRELATION_ID =
-    System.getProperty(P_CORRELATION_ID, D_CORRELATION_ID);
-  /** Propety name for the hostname. */
+  /**
+   * Actual correlation ID value.
+   */
+  public static final String CORRELATION_ID
+    = System.getProperty(P_CORRELATION_ID, D_CORRELATION_ID);
+  /**
+   * Propety name for the hostname.
+   */
   public static final String P_HOSTNAME = "hostname";
-  /** Default value for the hostname property. */
+  /**
+   * Default value for the hostname property.
+   */
   public static final String D_HOSTNAME = "unknown";
-  /** Property name for the text encoding. */
+  /**
+   * Property name for the text encoding.
+   */
   private static final String P_ENCODING = "jmstoolkit.encoding";
-  /** Default text encoding: UTF-8. */
+  /**
+   * Default text encoding: UTF-8.
+   */
   private static final String D_ENCODING = "UTF-8";
-  /** Property name for the connection factory. */
+  /**
+   * Property name for the connection factory.
+   */
   private static final String P_CONNECTION_FACTORY_NAME = "jmstoolkit.cf";
-  /** Property name for the JMS destination. */
+  /**
+   * Property name for the JMS destination.
+   */
   private static final String P_DESTINATION_NAME = "jmstoolkit.destination";
-  /** Message source/type "file". */
+  /**
+   * Message source/type "file".
+   */
   public static final String TYPE_FILE = "file";
-  /** Message source/type "stdin". */
+  /**
+   * Message source/type "stdin".
+   */
   public static final String TYPE_STDIN = "stdin";
-  /** Message source/type "fifo". */
+  /**
+   * Message source/type "fifo".
+   */
   public static final String TYPE_PIPE = "fifo";
-  /** Exit code for success. */
+  /**
+   * Exit code for success.
+   */
   private static final int X_OK = 0;
-  /** Exit code for error. */
+  /**
+   * Exit code for error.
+   */
   private static final int X_ERROR = 1;
-  /** Application name. */
+  /**
+   * Application name.
+   */
   private static final String APP_NAME = "Sender";
-  /** Message text encoding. */
+  /**
+   * Message text encoding.
+   */
   private String encoding = D_ENCODING;
-  /** Message source/type. */
+  /**
+   * Message source/type.
+   */
   private String messageType;
-  /** Message text. */
+  /**
+   * Message text.
+   */
   private String message = "";
-  /** Spring JmsTemplate. */
+  /**
+   * Spring JmsTemplate.
+   */
   private JmsTemplate jmsTemplate;
 
-  /** Constructor. */
+  /**
+   * Constructor.
+   */
   public Sender() {
     System.setProperty(P_APP_NAME, APP_NAME);
     try {
@@ -166,8 +215,8 @@ public class Sender {
     }
 
     // Initialize the beans
-    final ClassPathXmlApplicationContext applicationContext =
-      new ClassPathXmlApplicationContext(new String[]{"/app-context.xml"});
+    final ClassPathXmlApplicationContext applicationContext
+      = new ClassPathXmlApplicationContext(new String[]{"/app-context.xml"});
     applicationContext.start();
     final Sender sender = (Sender) applicationContext.getBean(APP_NAME);
 
@@ -190,12 +239,12 @@ public class Sender {
    * a J2EE container which pools JMS resources, or use the
    * CachingConnectionFactory.
    *
-   * @param inMessage
-   *          The text message to send.
+   * @param inMessage The text message to send.
    */
   public final void sendMessage(final Object inMessage) {
     this.getJmsTemplate().convertAndSend(inMessage);
   }
+
   /**
    *
    * @param inMessage the messaage to send
@@ -231,8 +280,8 @@ public class Sender {
   public final void sendInputStream(final InputStream inStream,
     final Integer inMessageLength) {
     final byte[] buffer = new byte[inMessageLength];
-    final BufferedInputStream messageInputStream =
-      new BufferedInputStream(new ByteArrayInputStream(buffer));
+    final BufferedInputStream messageInputStream
+      = new BufferedInputStream(new ByteArrayInputStream(buffer));
     try {
       while (messageInputStream.read(buffer) != -1) {
         sendMessage(buffer, new BasicMessageProcessor());
@@ -253,8 +302,8 @@ public class Sender {
     final StringBuilder messageString = new StringBuilder("");
     final byte[] buffer = new byte[4096];
     try {
-      messageFileStream =
-        new BufferedInputStream(new FileInputStream(messageFile));
+      messageFileStream
+        = new BufferedInputStream(new FileInputStream(messageFile));
       while (messageFileStream.read(buffer) != -1) {
         messageString.append(new String(buffer));
       }
@@ -274,13 +323,14 @@ public class Sender {
 
   /**
    * Read lines from stdin.
+   *
    * @return the text from stdin
    */
   public final String readLinesFromStdin() {
     final StringBuilder input = new StringBuilder();
     try {
-      final BufferedReader inputBuffer =
-        new BufferedReader(new InputStreamReader(System.in));
+      final BufferedReader inputBuffer
+        = new BufferedReader(new InputStreamReader(System.in));
       String line = "";
       while ((line = inputBuffer.readLine()) != null) {
         input.append(line);
@@ -298,8 +348,8 @@ public class Sender {
   public final void readAndSend(final String inputPipeName) {
     final StringBuilder input = new StringBuilder();
     try {
-      final BufferedReader inputBuffer =
-        new BufferedReader(new FileReader(new File(inputPipeName)));
+      final BufferedReader inputBuffer
+        = new BufferedReader(new FileReader(new File(inputPipeName)));
       String line = "";
       while (true) {
         line = inputBuffer.readLine();
