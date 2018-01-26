@@ -16,18 +16,17 @@ package com.jmstoolkit.cli;
 
 import com.jmstoolkit.JTKException;
 import com.jmstoolkit.Settings;
+import static com.jmstoolkit.cli.Receiver.D_APP_NAME;
 import gnu.getopt.Getopt;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.jms.ConnectionFactory;
-import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
 import javax.jms.TextMessage;
-import javax.naming.NamingException;
-import org.springframework.jndi.JndiTemplate;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.jms.listener.DefaultMessageListenerContainer;
 
 /**
  * This class is intended for testing JVM heap growth. The received messages
@@ -45,7 +44,7 @@ public class Heapstalk extends Receiver {
   /**
    * List of messages.
    */
-  private final List<String> messageList = new ArrayList<String>();
+  private final List<String> messageList = new ArrayList<>();
   /**
    * A message with this text body will end the program.
    */
@@ -81,7 +80,7 @@ public class Heapstalk extends Receiver {
     String jndiPropertiesFileName = D_JNDI_PROPERTIES;
     final String textEncoding = System.getProperty(P_ENCODING, D_ENCODING);
 
-    final Getopt getopt = new Getopt(D_APP_NAME, args, "c:i:j:f:e:h");
+    final Getopt getopt = new Getopt(D_APP_NAME, args, "c:i:j:h");
     int optionLetter;
     while ((optionLetter = getopt.getopt()) != -1) {
       switch (optionLetter) {
@@ -110,31 +109,16 @@ public class Heapstalk extends Receiver {
       System.exit(X_ERROR);
     }
 
+    // Initialize the beans
+    final ClassPathXmlApplicationContext applicationContext
+      = new ClassPathXmlApplicationContext(new String[]{"/app-context.xml"});
+    applicationContext.start();
     final Heapstalk receiver = new Heapstalk();
     receiver.setEncoding(textEncoding);
-
-    receiver.setJndiTemplate(new JndiTemplate(System.getProperties()));
-
-    try {
-      receiver.setConnectionFactory(getSpringConnectionFactory(
-        (ConnectionFactory) receiver.getJndiTemplate().lookup(
-          System.getProperty(P_CONNECTION_FACTORY_NAME))));
-    } catch (NamingException e) {
-      System.out.println("JNDI object could not be found: "
-        + System.getProperty(P_CONNECTION_FACTORY_NAME));
-      System.out.println(JTKException.formatException(e));
-      System.exit(X_ERROR);
-    }
-
-    try {
-      receiver.setDestination((Destination) receiver.getJndiTemplate().lookup(
-        System.getProperty(P_DESTINATION_NAME)));
-    } catch (NamingException e) {
-      System.out.println("JNDI object could not be found: "
-        + System.getProperty(P_DESTINATION_NAME));
-      System.out.println(JTKException.formatException(e));
-      System.exit(X_ERROR);
-    }
-    receiver.start();
+    DefaultMessageListenerContainer listener = 
+      (DefaultMessageListenerContainer) applicationContext.getBean("jmsContainer");
+    // over ride the message listener with a the heap grower
+    listener.setMessageListener(receiver);
+    listener.start();
   }
 }

@@ -192,16 +192,16 @@ public class Sender {
           break;
         case 'h':
           System.out.println("Arguments:\n"
-            + "[ -o destination ] JMS Destination JNDI name\n"
-            + "[ -c connection factory ] JMS ConnectionFactory JNDI name\n"
-            + "   Default values for -o and -c are set in app.properties\n"
-            + "   Use java -Dapp.properties to change name of properties file\n"
-            + "[ -j properties ] JNDI properties file (default: jndi.properties)\n"
-            + "[ -e encoding ] character encoding (default: UTF-8)\n"
-            + "[ -f file ] file to send\n"
-            + "[ -p fifo ] read from named pipe/fifo\n"
-            + "  If neither -p nor -f, read from stdin\n"
-            + "[ -i id ] JMS Correlation ID");
+            + "  [ -o destination ] JMS Destination JNDI name\n"
+            + "  [ -c connection factory ] JMS ConnectionFactory JNDI name\n"
+            + "  # Default values for -o and -c are set in app.properties\n"
+            + "  # Use java -Dapp.properties to change name of properties file\n"
+            + "  [ -j properties ] JNDI properties file (default: jndi.properties)\n"
+            + "  [ -e encoding ] character encoding (default: UTF-8)\n"
+            + "  [ -f file ] file to send\n"
+            + "  [ -p fifo ] read from named pipe/fifo\n"
+            + "  # If neither -p nor -f, read from stdin\n"
+            + "  [ -i id ] JMS Correlation ID");
           System.exit(X_ERROR);
       }
     }
@@ -297,13 +297,12 @@ public class Sender {
    * @return the text of the file
    */
   public final String loadTextFile(final String inFileName) {
-    BufferedInputStream messageFileStream = null;
     final File messageFile = new File(inFileName);
     final StringBuilder messageString = new StringBuilder("");
     final byte[] buffer = new byte[4096];
-    try {
-      messageFileStream
-        = new BufferedInputStream(new FileInputStream(messageFile));
+    try (BufferedInputStream messageFileStream
+        = new BufferedInputStream(new FileInputStream(messageFile))) {
+      
       while (messageFileStream.read(buffer) != -1) {
         messageString.append(new String(buffer));
       }
@@ -311,13 +310,7 @@ public class Sender {
       LOGGER.log(Level.SEVERE, "You want a what?", e);
     } catch (IOException e) {
       LOGGER.log(Level.SEVERE, "Sorry, I don't do that.", e);
-    } finally {
-      try {
-        messageFileStream.close();
-      } catch (IOException e) {
-        //
-      }
-    }
+    } 
     return messageString.toString().trim();
   }
 
@@ -328,9 +321,8 @@ public class Sender {
    */
   public final String readLinesFromStdin() {
     final StringBuilder input = new StringBuilder();
-    try {
-      final BufferedReader inputBuffer
-        = new BufferedReader(new InputStreamReader(System.in));
+    try (BufferedReader inputBuffer
+        = new BufferedReader(new InputStreamReader(System.in))) {
       String line = "";
       while ((line = inputBuffer.readLine()) != null) {
         input.append(line);
@@ -347,9 +339,8 @@ public class Sender {
    */
   public final void readAndSend(final String inputPipeName) {
     final StringBuilder input = new StringBuilder();
-    try {
-      final BufferedReader inputBuffer
-        = new BufferedReader(new FileReader(new File(inputPipeName)));
+    try (BufferedReader inputBuffer
+        = new BufferedReader(new FileReader(new File(inputPipeName)))) {
       String line = "";
       while (true) {
         line = inputBuffer.readLine();

@@ -14,7 +14,6 @@
  */
 package com.jmstoolkit.cli;
 
-import com.jmstoolkit.AbstractSpringMessageListener;
 import com.jmstoolkit.JTKException;
 import com.jmstoolkit.Settings;
 import gnu.getopt.Getopt;
@@ -30,26 +29,30 @@ import java.io.Writer;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.jms.BytesMessage;
-import javax.jms.ConnectionFactory;
-import javax.jms.Destination;
 import javax.jms.JMSException;
 import javax.jms.Message;
+import javax.jms.MessageListener;
 import javax.jms.TextMessage;
-import javax.naming.NamingException;
-import org.springframework.jms.connection.UserCredentialsConnectionFactoryAdapter;
-import org.springframework.jndi.JndiTemplate;
+import org.springframework.context.support.ClassPathXmlApplicationContext;
+import org.springframework.jms.listener.DefaultMessageListenerContainer;
 
 /**
  *
  * @author Scott Douglass
  */
-public class Receiver extends AbstractSpringMessageListener {
+public class Receiver implements MessageListener {
 
   /**
    * Logger for this class.
    */
   private static final Logger LOGGER
     = Logger.getLogger(Receiver.class.getName());
+  /** Property for the application name. */
+  protected static final String P_APP_NAME = "app.name";
+  /** Default value for the application name. */
+  protected static final String D_APP_NAME = "Receiver";
+  /** Default value of the name of the JNDI properties file. */
+  protected static final String D_JNDI_PROPERTIES = "jndi.properties";
   /**
    * Property name for the character set encoding.
    */
@@ -98,6 +101,8 @@ public class Receiver extends AbstractSpringMessageListener {
    * The Writer for the OutputSream.
    */
   private Writer outputWriter = null;
+  /** Integer value of the number of messages received. */
+  private Integer messagesReceived = 0;
 
   @Override
   public void onMessage(Message msg) {
@@ -132,9 +137,7 @@ public class Receiver extends AbstractSpringMessageListener {
     }
   }
 
-  @Override
   public final void stop() {
-    super.stop();
     if (getOutputWriter() != null) {
       try {
         getOutputWriter().close();
@@ -167,7 +170,7 @@ public class Receiver extends AbstractSpringMessageListener {
     Integer maximumNumberOfMessages = 0;
     String textEncoding = System.getProperty(P_ENCODING, D_ENCODING);
 
-    Getopt getopt = new Getopt(D_APP_NAME, args, "c:i:o:j:f:n:e:h");
+    Getopt getopt = new Getopt(D_APP_NAME, args, "c:i:o:j:n:e:h");
     int optionLetter;
     while ((optionLetter = getopt.getopt()) != -1) {
       switch (optionLetter) {
@@ -191,11 +194,11 @@ public class Receiver extends AbstractSpringMessageListener {
           break;
         case 'h':
           System.out.println("Arguments:\n  [ -i JMS Destination JNDI name ]\n"
-            + "[ -c JMS ConnectionFactory JNDI name ]\n  "
-            + "[ -j JNDI properties ]\n  "
-            + "[ -e character encoding (default: UTF-8) ]\n  "
-            + "[ -n number of message to receive ]\n  "
-            + "[ -o output file (if not set output to stdout) ]");
+            + "  [ -c JMS ConnectionFactory JNDI name ]\n"
+            + "  [ -j JNDI properties ]\n"
+            + "  [ -e character encoding (default: UTF-8) ]\n"
+            + "  [ -n number of message to receive ]\n"
+            + "  [ -o output file (if not set output to stdout) ]");
           System.exit(X_ERROR);
       }
     }
@@ -220,64 +223,20 @@ public class Receiver extends AbstractSpringMessageListener {
       }
     }
 
-    final Receiver receiver = new Receiver();
+    // Initialize the beans
+    final ClassPathXmlApplicationContext applicationContext
+      = new ClassPathXmlApplicationContext(new String[]{"/app-context.xml"});
+    applicationContext.start();
+    final Receiver receiver = (Receiver) applicationContext.getBean(D_APP_NAME);
     receiver.setMaximumMessagesToReceive(maximumNumberOfMessages);
     receiver.setEncoding(textEncoding);
     receiver.setOutputStream(outputStream);
-
-    receiver.setJndiTemplate(new JndiTemplate(System.getProperties()));
-
-    try {
-      receiver.setConnectionFactory(getSpringConnectionFactory(
-        (ConnectionFactory) receiver.getJndiTemplate().lookup(
-          System.getProperty(P_CONNECTION_FACTORY_NAME))));
-      if (receiver.getListenerContainer().getConnectionFactory() == null) {
-        throw new NamingException("Something is wrong.");
-      }
-    } catch (NamingException e) {
-      System.out.println("JNDI object could not be found: "
-        + System.getProperty(P_CONNECTION_FACTORY_NAME));
-      System.out.println(JTKException.formatException(e));
-      System.exit(X_ERROR);
-    }
-
-    try {
-      receiver.setDestination((Destination) receiver.getJndiTemplate().lookup(
-        System.getProperty(P_DESTINATION_NAME)));
-    } catch (NamingException e) {
-      System.out.println("JNDI object could not be found: "
-        + System.getProperty(P_DESTINATION_NAME));
-      System.out.println(JTKException.formatException(e));
-      System.exit(X_ERROR);
-    }
-    receiver.start();
+    DefaultMessageListenerContainer listener = 
+      (DefaultMessageListenerContainer) applicationContext.getBean("jmsContainer");
+    listener.start();
   }
 
-  /**
-   * Lordy, no XAConnectionFactory support in the
-   * UserCredentialsConnectionFactoryAdapter! See:
-   * https://jira.springsource.org/browse/SPR-7952
-   *
-   * Also, Spring 3 changed the CachingConnectionFactory so that it extends
-   * SingleConnectionFactory which explicitly does not allow the username and
-   * password to be passed to the createTopic,createQueue methods. Arrgh.
-   *
-   * @param basecf is any implementation of ConnectionFactory
-   * @return UserCredentialsConnectionFactoryAdapter
-   */
-  public static ConnectionFactory getSpringConnectionFactory(
-    final ConnectionFactory basecf) {
-    final UserCredentialsConnectionFactoryAdapter uccfa
-      = new UserCredentialsConnectionFactoryAdapter();
-    //CachingConnectionFactory ccf = new CachingConnectionFactory(basecf);
-    //ccf.setCacheProducers(true);
-    //uccfa.setTargetConnectionFactory(ccf);
-    uccfa.setTargetConnectionFactory(basecf);
-    uccfa.setUsername(System.getProperty(P_USERNAME));
-    uccfa.setPassword(System.getProperty(P_PASSWORD));
-    return uccfa;
-  }
-
+  
   /**
    * @return the outputStream
    */
@@ -333,5 +292,19 @@ public class Receiver extends AbstractSpringMessageListener {
   public final void setMaximumMessagesToReceive(
     final Integer inMaximumMessagesToReceive) {
     this.maximumMessagesToReceive = inMaximumMessagesToReceive;
+  }
+  
+  /**
+   * @return the messagesReceived
+   */
+  public final Integer getMessagesReceived() {
+    return messagesReceived;
+  }
+  
+  /**
+   * @param inMessagesReceived the number of messages received
+   */
+  public final void setMessagesReceived(final Integer inMessagesReceived) {
+    this.messagesReceived = inMessagesReceived;
   }
 }

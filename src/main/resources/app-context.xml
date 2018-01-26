@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <beans xmlns="http://www.springframework.org/schema/beans"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://www.springframework.org/schema/beans 
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans 
   http://www.springframework.org/schema/beans/spring-beans.xsd">
 
   <bean id="propertyConfigurer"
-    class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+        class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
     <property name="systemPropertiesModeName" value="SYSTEM_PROPERTIES_MODE_OVERRIDE"/>
     <property name="location">
       <value>file:${user.dir}/${app.properties}</value>
@@ -35,7 +35,7 @@
     <property name="jndiName" value="${jmstoolkit.destination}" />
   </bean>
 
-   <bean id="jmsTemplate" class="org.springframework.jms.core.JmsTemplate">
+  <bean id="jmsTemplate" class="org.springframework.jms.core.JmsTemplate">
     <property name="connectionFactory" ref="cachingConnectionFactory" />
     <property name="defaultDestination" ref="input" />
   </bean>
@@ -47,6 +47,15 @@
   <bean id="Sender" class="com.jmstoolkit.cli.Sender">
     <property name="jmsTemplate" ref="jmsTemplate"/>
   </bean>
-
+  
+  <bean id="Receiver" class="com.jmstoolkit.cli.Receiver">
+  </bean>
+  
+  <bean id="jmsContainer"
+        class="org.springframework.jms.listener.DefaultMessageListenerContainer">
+    <property name="connectionFactory" ref="cachingConnectionFactory" />
+    <property name="destination" ref="input"/>
+    <property name="messageListener" ref="Receiver" />
+  </bean> 
 
 </beans>
