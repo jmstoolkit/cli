@@ -16,7 +16,6 @@ package com.jmstoolkit.cli;
 
 import com.jmstoolkit.JTKException;
 import com.jmstoolkit.Settings;
-import static com.jmstoolkit.cli.Receiver.D_APP_NAME;
 import gnu.getopt.Getopt;
 import java.util.ArrayList;
 import java.util.List;
